@@ -205,7 +205,12 @@ function parseAll(content) {
     let parsed = [];
 
     for (let i = 0; i < toParse.length; i++) {
-        parsed.push(parse(toParse[i]));
+        if (toParse[i].includes("ItemStack[]")) {
+            let p = parse(toParse[i]);
+            console.log(p);
+            console.log(toParse[i]);
+            parsed.push(p);
+        }
     }
     
     return parsed;
