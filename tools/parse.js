@@ -104,7 +104,7 @@ function parse(content) {
                 continue;
             }
     
-            if(content[i] == ",") {
+            if(content[i] == "," || content[i] == "}" || content[i] == ")") {
                 index = i + 1;
                 break;
             }
@@ -112,10 +112,108 @@ function parse(content) {
             recipie[j]+=content[i];
         }
     }
+    let itemStack = 1;
 
-    return recipie;
+    if (content[index] != ')') {
+        index++;
+
+        for (let i = index; i < content.length; i++) {
+            if(content[i] == "(") {
+                index = i + 1;
+                break;
+            }
+        }
+
+        for (let i = index; i < content.length; i++) {
+            if (content[i] == ',') {
+                index = i + 1;
+                break;
+            }
+        }
+        let tmp = '';
+        for (let i = index; i < content.length; i++) {
+            if (content[i] == ' ' || content[i] == '\n') {
+                continue;
+            }
+    
+            if(content[i] == ")") {
+                index = i + 1;
+                break;
+            }
+    
+            tmp+=content[i];
+        }
+        itemStack = Number(tmp);
+    }
+
+    let props = content.substr(index+1).replace(/\s/g, "");
+    let capacity = -1;
+    let energyConsumption = -1;
+    let processingSpeed = -1;
+    
+    for (let i = 0; content.substr(i, i+8) != ".register(plugin);"; i++) {
+        if (props[i] == '.') {
+            i++;
+            let tmp = '';
+            let temp = '';
+            for(let j = i; j < props.length; j++) {
+                if(props[j] == "(") {
+                    j++;
+                    for(let k = j; k < props.length; k++) {
+                        if(props[k] == ")") {
+                            index = i + 1;
+                            break;
+                        }
+                        temp+= props[k];
+                    }
+                    break;
+                }
+
+                if(props[j] == ")") {
+                    break;
+                }
+                tmp+= props[j];
+            }
+            if (tmp == 'setCapacity') {
+                capacity = Number(temp);
+            }
+            if (tmp == 'setEnergyConsumption') {
+                energyConsumption = Number(temp);
+            }
+            if (tmp == 'setProcessingSpeed') {
+                processingSpeed = Number(temp);
+            }
+        }
+    }
+
+    let item = {
+        itemName: itemName,
+        itemGroup: itemGroup,
+        RecipeType: RecipeType,
+        recipie: recipie,
+        capacity: capacity,
+        energyConsumption: energyConsumption,
+        processingSpeed: processingSpeed
+    }
+
+    return item;
 }
 
+function parseAll(content) {
+    let toParse = content.replace(/(?<=;)\s+(?=new)/g, '!__!');
+    toParse = toParse.split("!__!");
+    let parsed = [];
+
+    for (let i = 0; i < toParse.length; i++) {
+        parsed.push(parse(toParse[i]));
+    }
+    
+    return parsed;
+}
+  
+  
 var content = fs.readFileSync('./tools/recipies.java','utf8');
 
-console.log(parse(content));
+console.log(parseAll(content));
+// Output: '        new MeatJerky(itemGroups.food,SlimefunItems.BEEF_JERKY,RecipeType.ENHANCED_CRAFTING_TABLE,new ItemStack[] {SlimefunItems.SALT,new ItemStack(Material.COOKED_BEEF),null,null,null,null,null,null,null}).register(plugin);'
+
