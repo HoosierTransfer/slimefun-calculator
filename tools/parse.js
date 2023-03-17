@@ -2,7 +2,6 @@ import * as fs from 'fs'
 
 function parse(content) {
     content = content.substr(4);
-    let itemName = '';
     let index = 0;
     for (let i = 0; i < content.length; i++) {
         if (content[i] == ' ' || content[i] == '\n') {
@@ -13,8 +12,6 @@ function parse(content) {
             index = i + 1;
             break;
         }
-
-        itemName+=content[i];
     }
 
     for (let i = index; i < content.length; i++) {
@@ -37,11 +34,34 @@ function parse(content) {
         itemGroup+=content[i];
     }
 
+    if (content.includes("Radioactivity")) {
+        for (let i = index; i < content.length; i++) {
+            if (content[i] == ',') {
+                index = i + 1;
+                break;
+            }
+        }
+    }
+
+    let itemName = '';
+
     for (let i = index; i < content.length; i++) {
-        if (content[i] == ',') {
+        if (content[i] == '.') {
             index = i + 1;
             break;
         }
+    }
+
+    for (let i = index; i < content.length; i++) {
+        if (content[i] == ' ' || content[i] == '\n') {
+            continue;
+        }
+
+        if(content[i] == ",") {
+            index = i + 1;
+            break;
+        }
+        itemName+=content[i];
     }
 
     for (let i = index; i < content.length; i++) {
@@ -202,14 +222,12 @@ function parse(content) {
 function parseAll(content) {
     let toParse = content.replace(/(?<=;)\s+(?=new)/g, '!__!');
     toParse = toParse.split("!__!");
-    let parsed = [];
+    let parsed = {};
 
     for (let i = 0; i < toParse.length; i++) {
         if (toParse[i].includes("ItemStack[]")) {
             let p = parse(toParse[i]);
-            console.log(p);
-            console.log(toParse[i]);
-            parsed.push(p);
+            parsed[p.itemName] = p;
         }
     }
     
@@ -219,6 +237,8 @@ function parseAll(content) {
   
 var content = fs.readFileSync('./tools/recipies.java','utf8');
 
-console.log(parseAll(content));
+let parsed = parseAll(content);
 // Output: '        new MeatJerky(itemGroups.food,SlimefunItems.BEEF_JERKY,RecipeType.ENHANCED_CRAFTING_TABLE,new ItemStack[] {SlimefunItems.SALT,new ItemStack(Material.COOKED_BEEF),null,null,null,null,null,null,null}).register(plugin);'
+
+fs.writeFileSync("./tools/parsed.json", JSON.stringify(parsed));
 

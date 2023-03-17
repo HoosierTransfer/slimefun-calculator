@@ -36,10 +36,6 @@
     }
 </style>
 
-<div class="title-container"><h1 class="title">Slimefun thing</h1></div>
-
-<div class="card-container">
-    <div class="card">
-        <h1></h1>
-    </div>
-</div>
+<script>
+    
+</script>
