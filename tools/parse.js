@@ -205,6 +205,20 @@ function parse(content) {
             }
         }
     }
+    if (itemName.includes("_")) {
+        itemName = itemName.split("_");
+        for (let i = 0; i < itemName.length; i++) {
+            itemName[i] = itemName[i].toLowerCase();
+            itemName[i] = itemName[i].charAt(0).toUpperCase() + itemName[i].slice(1);
+        }
+        itemName = itemName.join(" ");
+    } else {
+        itemName = itemName.toLowerCase();
+        itemName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+    }
+
+    // itemGroup = itemGroup.replace(/([A-Z]+)/g, " $1").replace(/([A-Z][a-z])/g, "$1");
+    // itemGroup = itemGroup.charAt(0).toUpperCase() + itemGroup.slice(1);
 
     let item = {
         itemName: itemName,
@@ -233,6 +247,21 @@ function parseAll(content) {
     
     return parsed;
 }
+
+function parseAllArray(content) {
+    let toParse = content.replace(/(?<=;)\s+(?=new)/g, '!__!');
+    toParse = toParse.split("!__!");
+    let parsed = [];
+
+    for (let i = 0; i < toParse.length; i++) {
+        if (toParse[i].includes("ItemStack[]")) {
+            let p = parse(toParse[i]);
+        parsed.push(p);
+        }
+    }
+    
+    return parsed;
+}
   
   
 var content = fs.readFileSync('./tools/recipies.java','utf8');
@@ -241,4 +270,9 @@ let parsed = parseAll(content);
 // Output: '        new MeatJerky(itemGroups.food,SlimefunItems.BEEF_JERKY,RecipeType.ENHANCED_CRAFTING_TABLE,new ItemStack[] {SlimefunItems.SALT,new ItemStack(Material.COOKED_BEEF),null,null,null,null,null,null,null}).register(plugin);'
 
 fs.writeFileSync("./tools/parsed.json", JSON.stringify(parsed));
+
+parsed = parseAllArray(content);
+// Output: '        new MeatJerky(itemGroups.food,SlimefunItems.BEEF_JERKY,RecipeType.ENHANCED_CRAFTING_TABLE,new ItemStack[] {SlimefunItems.SALT,new ItemStack(Material.COOKED_BEEF),null,null,null,null,null,null,null}).register(plugin);'
+
+fs.writeFileSync("./tools/parsedArray.json", JSON.stringify(parsed));
 
